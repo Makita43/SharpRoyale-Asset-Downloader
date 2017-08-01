@@ -78,6 +78,9 @@
 
                                 if (_Socket.Available == 0 && Length <= (_List.Count / 7) - 610)
                                 {
+                                    _Socket.Shutdown(SocketShutdown.Both);
+                                    _Socket.Close();
+
                                     break;
                                 }
                             }

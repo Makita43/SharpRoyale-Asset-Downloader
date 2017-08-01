@@ -95,7 +95,7 @@
 
                             _Client.DownloadFile(URL, $"Output/compressed/{_File.Name}");
 
-                            if (_File.Name.EndsWith(".csv"))
+                            if (_File.Name.EndsWith(".csv") || _File.Name.EndsWith(".sc"))
                             {
                                 if (!Directory.Exists($"Output/decompressed/{Path.GetDirectoryName(_File.Name)}"))
                                 {
@@ -106,16 +106,34 @@
                                 {
                                     using (FileStream _Stream = new FileStream($"Output/decompressed/{_File.Name}", FileMode.Create))
                                     {
-                                        byte[] _Properties = new byte[5];
-                                        _FS.Read(_Properties, 0, 5);
+                                        if (_File.Name.EndsWith(".sc"))
+                                        {
+                                            _FS.Seek(26, SeekOrigin.Current);                                  
 
-                                        byte[] _Buffer = new byte[4];
-                                        _FS.Read(_Buffer, 0, 4);
+                                            byte[] _Properties = new byte[5];
+                                            _FS.Read(_Properties, 0, 5);
 
-                                        int _OutLength = BitConverter.ToInt32(_Buffer, 0);
+                                            byte[] _Buffer = new byte[4];
+                                            _FS.Read(_Buffer, 0, 4);
 
-                                        _Decoder.SetDecoderProperties(_Properties);
-                                        _Decoder.Code(_FS, _Stream, _FS.Length, _OutLength, null);
+                                            int _OutLength = BitConverter.ToInt32(_Buffer, 0);
+
+                                            _Decoder.SetDecoderProperties(_Properties);
+                                            _Decoder.Code(_FS, _Stream, _FS.Length, _OutLength, null);
+                                        }
+                                        else
+                                        {
+                                            byte[] _Properties = new byte[5];
+                                            _FS.Read(_Properties, 0, 5);
+
+                                            byte[] _Buffer = new byte[4];
+                                            _FS.Read(_Buffer, 0, 4);
+
+                                            int _OutLength = BitConverter.ToInt32(_Buffer, 0);
+
+                                            _Decoder.SetDecoderProperties(_Properties);
+                                            _Decoder.Code(_FS, _Stream, _FS.Length, _OutLength, null);
+                                        }                                     
                                     }
                                 }
                             }
