@@ -1,6 +1,8 @@
 ﻿namespace SharpRoyale_Asset_Downloader
 {
     using Core;
+    using Definitions;
+    using Newtonsoft.Json;
     using SevenZip.SDK.Compress.LZMA;
     using System;
     using System.IO;
@@ -12,8 +14,7 @@
         internal static Hash_Module Hash_Module;
 
         internal static Prefixed _Prefixed = new Prefixed();
-
-        internal static Decoder _Decoder = new Decoder();
+        internal static Decoder _Decoder   = new Decoder();
 
         public static void Main(string[] args)
         {
@@ -37,79 +38,105 @@
 
             Console.WriteLine("Starting...\n");
 
-            if (!Directory.Exists("Output"))
-            {
-                Directory.CreateDirectory("Output");
-
-                Console.WriteLine("Output directory has been created.\n");
-            }
-            else
-            {
-                Directory.Delete("Output", true);
-                Directory.CreateDirectory("Output");
-
-                Console.WriteLine("Output directory has been cleared.\n");
-            }
-
             Hash_Module = new Hash_Module("game.clashroyaleapp.com");
 
-            Console.WriteLine($"Downloaded Fingerprint, Hash: {Hash_Module.Fingerprint.Hash} - Version: {Hash_Module.Fingerprint.Version}.\n");
-
-            Console.WriteLine($"Downloading {Hash_Module.Fingerprint.Files.Count} Files...\n\n");
-         
-            using (WebClient _Client = new WebClient())
+            if (!ReferenceEquals(null, Hash_Module.Fingerprint))
             {
-                int Downloaded = 0;
+                Console.WriteLine($"Downloaded Fingerprint, Hash: {Hash_Module.Fingerprint.Hash} - Version: {Hash_Module.Fingerprint.Version}.\n");
 
-                foreach (var _File in Hash_Module.Fingerprint.Files)
+                if (!File.Exists("fingerprint.json"))
                 {
-                    string URL = $"{Settings.Hosts[0]}{Hash_Module.Fingerprint.Hash}/{_File.Name}";
+                    File.WriteAllText("fingerprint.json", JsonConvert.SerializeObject(Hash_Module.Fingerprint));
 
-                    try
+                    Console.WriteLine($"Fingerprint has been saved.");
+                }
+                else
+                {
+                    Fingerprint _Fingerprint = JsonConvert.DeserializeObject<Fingerprint>(File.ReadAllText("fingerprint.json"), new JsonSerializerSettings() { Formatting = Formatting.Indented });
+
+                    if (_Fingerprint.Hash == Hash_Module.Fingerprint.Hash)
                     {
-                        if (!Directory.Exists($"Output/compressed/{Path.GetDirectoryName(_File.Name)}"))
-                        {
-                            Directory.CreateDirectory($"Output/compressed/{Path.GetDirectoryName(_File.Name)}");
-                        }
-
-                        _Client.DownloadFile(URL, $"Output/compressed/{_File.Name}");
-
-                        if (_File.Name.EndsWith(".csv"))
-                        {
-                            if (!Directory.Exists($"Output/decompressed/{Path.GetDirectoryName(_File.Name)}"))
-                            {
-                                Directory.CreateDirectory($"Output/decompressed/{Path.GetDirectoryName(_File.Name)}");
-                            }
-
-                            using (FileStream _FS = new FileStream($"Output/compressed/{_File.Name}", FileMode.Open))
-                            {
-                                using (FileStream _Stream = new FileStream($"Output/decompressed/{_File.Name}", FileMode.Create))
-                                {
-                                    byte[] _Properties = new byte[5];
-                                    _FS.Read(_Properties, 0, 5);
-
-                                    byte[] _Buffer = new byte[4];
-                                    _FS.Read(_Buffer, 0, 4);
-
-                                    int _OutLength = BitConverter.ToInt32(_Buffer, 0);
-
-                                    _Decoder.SetDecoderProperties(_Properties);
-                                    _Decoder.Code(_FS, _Stream, _FS.Length, _OutLength, null);
-                                }
-                            }
-                        }
-
-                        Downloaded++;
-
-                        Console.SetCursorPosition(0, Console.CursorTop - 1);
-                        Console.WriteLine($"Progress: {Math.Round((double)(100 * Downloaded) / Hash_Module.Fingerprint.Files.Count)}%, {Downloaded}/{Hash_Module.Fingerprint.Files.Count}");
-                    }
-                    catch (Exception)
-                    {
+                        Console.WriteLine($"No new Patch found.");
+                        Console.ReadKey(true);
+                        Environment.Exit(0);
                     }
                 }
 
-                Console.WriteLine($"\nDownloaded {Downloaded}/{Hash_Module.Fingerprint.Files.Count} Files.");
+                if (!Directory.Exists("Output"))
+                {
+                    Directory.CreateDirectory("Output");
+
+                    Console.WriteLine("Output directory has been created.\n");
+                }
+                else
+                {
+                    Directory.Delete("Output", true);
+                    Directory.CreateDirectory("Output");
+
+                    Console.WriteLine("Output directory has been cleared.\n");
+                }
+
+                Console.WriteLine($"Downloading {Hash_Module.Fingerprint.Files.Count} Files...\n\n");
+
+                using (WebClient _Client = new WebClient())
+                {
+                    int Downloaded = 0;
+
+                    foreach (var _File in Hash_Module.Fingerprint.Files)
+                    {
+                        string URL = $"{Settings.Hosts[0]}{Hash_Module.Fingerprint.Hash}/{_File.Name}";
+
+                        try
+                        {
+                            if (!Directory.Exists($"Output/compressed/{Path.GetDirectoryName(_File.Name)}"))
+                            {
+                                Directory.CreateDirectory($"Output/compressed/{Path.GetDirectoryName(_File.Name)}");
+                            }
+
+                            _Client.DownloadFile(URL, $"Output/compressed/{_File.Name}");
+
+                            if (_File.Name.EndsWith(".csv"))
+                            {
+                                if (!Directory.Exists($"Output/decompressed/{Path.GetDirectoryName(_File.Name)}"))
+                                {
+                                    Directory.CreateDirectory($"Output/decompressed/{Path.GetDirectoryName(_File.Name)}");
+                                }
+
+                                using (FileStream _FS = new FileStream($"Output/compressed/{_File.Name}", FileMode.Open))
+                                {
+                                    using (FileStream _Stream = new FileStream($"Output/decompressed/{_File.Name}", FileMode.Create))
+                                    {
+                                        byte[] _Properties = new byte[5];
+                                        _FS.Read(_Properties, 0, 5);
+
+                                        byte[] _Buffer = new byte[4];
+                                        _FS.Read(_Buffer, 0, 4);
+
+                                        int _OutLength = BitConverter.ToInt32(_Buffer, 0);
+
+                                        _Decoder.SetDecoderProperties(_Properties);
+                                        _Decoder.Code(_FS, _Stream, _FS.Length, _OutLength, null);
+                                    }
+                                }
+                            }
+
+                            Downloaded++;
+
+                            Console.SetCursorPosition(0, Console.CursorTop - 1);
+                            Console.WriteLine($"Progress: {Math.Round((double)(100 * Downloaded) / Hash_Module.Fingerprint.Files.Count)}%, {Downloaded}/{Hash_Module.Fingerprint.Files.Count}");
+                        }
+                        catch (Exception)
+                        {
+                        }
+                    }
+
+                    Console.WriteLine();
+                    Console.WriteLine($"Downloaded {Downloaded}/{Hash_Module.Fingerprint.Files.Count} Files.");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Failed to download the Fingerprint.");
             }
 
             Console.ReadKey(true);        
