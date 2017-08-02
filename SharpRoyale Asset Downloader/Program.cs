@@ -205,7 +205,7 @@
                         }
                         else
                         {
-                            Console.WriteLine("Fingerprint not found. Please re-downlad the Assets.");
+                            Console.WriteLine("Fingerprint not found. Please re-download the Assets.");
                         }                
 
                         break;
