@@ -44,6 +44,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -52,7 +53,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Core\Compression\File_Type.cs" />
+    <Compile Include="Core\Compression\LZMA.cs" />
     <Compile Include="Core\Prefixed.cs" />
+    <Compile Include="Core\SC\SC2PNG.cs" />
     <Compile Include="Core\Settings.cs" />
     <Compile Include="Definitions\Fingerprint.cs" />
     <Compile Include="Definitions\Items\File.cs" />

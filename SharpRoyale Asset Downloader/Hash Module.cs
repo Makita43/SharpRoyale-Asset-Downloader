@@ -18,27 +18,35 @@
 
         internal Hash_Module(string Host)
         {
-            List<byte> _Packet = new List<byte>();
-            _Packet.AddUShort(10100); // ID
-            _Packet.Add(0);
-            _Packet.AddUShort(72); // Length
-            _Packet.AddUShort(1); // Version
-
-            _Packet.AddInt(1); // Protocol
-            _Packet.AddInt(Settings.Key_Version); // Key Version
-            _Packet.AddInt(Settings.Major_Version); // Major Version
-            _Packet.AddInt(0); // Revision
-            _Packet.AddInt(Settings.Minor_Version); // Minor Version
-            _Packet.AddString("9e5bf715eec4b3a9706515c21f7b519713b2d906"); // Hash from Clash of Clans 5.2.4 :)
-            _Packet.AddInt(2);
-            _Packet.AddInt(2); // Store
-
-            _Socket.NoDelay = true;
             _Socket.Connect(Host, 9339);
 
-            _Socket.Send(_Packet.ToArray());
+            _Socket.Send(Session_Request);
 
             ReceiveSync();
+        }
+
+        internal byte[] Session_Request
+        {
+            get
+            {
+                List<byte> _Packet = new List<byte>();
+
+                _Packet.AddUShort(10100); // ID
+                _Packet.Add(0);
+                _Packet.AddUShort(72); // Length
+                _Packet.AddUShort(1); // Version
+
+                _Packet.AddInt(1); // Protocol
+                _Packet.AddInt(Settings.Key_Version); // Key Version
+                _Packet.AddInt(Settings.Major_Version); // Major Version
+                _Packet.AddInt(0); // Revision
+                _Packet.AddInt(Settings.Minor_Version); // Minor Version
+                _Packet.AddString("9e5bf715eec4b3a9706515c21f7b519713b2d906"); // Hash from Clash of Clans 5.2.4 :)
+                _Packet.AddInt(2);
+                _Packet.AddInt(2); // Store
+
+                return _Packet.ToArray();
+            }
         }
 
         internal void ReceiveSync()
